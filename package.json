@@ -15,5 +15,10 @@
   "bugs": {
     "url": "https://github.com/helloTiKi/mysApi/issues"
   },
-  "homepage": "https://github.com/helloTiKi/mysApi#readme"
+  "homepage": "https://github.com/helloTiKi/mysApi#readme",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.5.0",
+    "node-fetch": "^3.3.2"
+  }
 }
