@@ -53,16 +53,15 @@ var Api = {
 
 }
 
-var salt = {
-    '2.58.2': {
-        getDS: 'KTJQGN2a2Trqk0tcQZS6JV3rU7CnV8Q6'
-    }
+var saltType = {
+    'IZPgfb0dRPtBeLuFkdDznSZ6f4wWt6y2': 2
 }
+
 var hostSalt = {
     'passport-api.mihoyo.com': 'IZPgfb0dRPtBeLuFkdDznSZ6f4wWt6y2'
 }
 
 
 export {
-    appconfig, defaultDevice, retcode, hostSalt
+    appconfig, defaultDevice, retcode, hostSalt, saltType
 }

@@ -1,10 +1,26 @@
 import md5 from 'md5';
 import axios from 'axios';
 import Cookie from '../user/CookiesUtils.js';
-import { appconfig, hostSalt } from '../config/appconfig.js';
+import { appconfig, hostSalt, saltType } from '../config/appconfig.js';
 import { geetest } from 'geetest-auto';
 import CryptoJS from 'crypto-js';
 
+function getSaltFunction(salt = '') {
+    if (!salt) return false
+    let type = saltType[salt];
+    switch (type) {
+        case 1:
+            return function () {
+                return getDs(salt)
+            }
+        case 2:
+            return function (body = '', query = '') {
+                return getDssign(salt, body, query)
+            }
+        default:
+            return false
+    }
+}
 function getUrlHost(url = '') {
     if (/https?:\/\/(.*?)\//g.test(url)) {
         let data = /https?:\/\/(.*?)\//g.exec(url)[1]
@@ -18,16 +34,28 @@ function getUrlQuery(url = '') {
     }
     return ''
 }
-function getUrlSign(url) {
+function getUrlSign(url, data = '') {
     let host = getUrlHost(url)
-    return hostSalt[host] || ''
+    let salt = hostSalt[host] || ''
+    if (!salt) return ''
+    let query = getUrlQuery(url);
+    let signFunction = getSaltFunction(salt);
+    if (signFunction) {
+        return signFunction(data, query)
+    }
+    return ''
 }
 function getDs(salt) {
     let str = `salt=${salt}&t=${getTimeNow(10)}&r=${getRandomString(6)}`
     return md5(str)
 }
 
-
+function getDssign(salt, body = '', query = '') {
+    var valueOf = getTimeNow(10);
+    var sb3 = getRandomString(6);
+    var m26360b = md5(`salt=${salt}&t=${valueOf}&r=${sb3}&b=${body}&q=${query}`);
+    return valueOf + ',' + sb3 + ',' + m26360b;
+}
 
 /**
  * @typedef {object} mysResponse
@@ -38,36 +66,6 @@ function getDs(salt) {
  */
 
 export default class RequestUtils {
-    /**@private */
-    SALT_PROD = "JwYDpKvLj6MrMqqYU6jTKF17KNO2PXoS";
-    /**@private */
-    SALT_DEV = "IZPgfb0dRPtBeLuFkdDznSZ6f4wWt6y2";
-    static createSign(body = '', query = '') {
-        try {
-            var valueOf = getTimeNow(10);
-            var sb3 = getRandomString(6);
-            var m26360b = md5("salt=IZPgfb0dRPtBeLuFkdDznSZ6f4wWt6y2" + "&t=" + valueOf + "&r=" + sb3 + "&b=" + body + "&q=" + query);
-            return valueOf + ',' + sb3 + ',' + m26360b;
-        } catch (e) {
-            console.error(e);
-            return "";
-        }
-    }
-    setEnv(porteEnv = 1) {
-        var i = porteEnv;
-        var str = this.SALT_DEV;
-        if (i != 1) {
-            if (i != 2) {
-                if (i != 3) {
-                    if (i != 4 && i != 5) {
-                        throw "Invalid porte env";
-                    }
-                }
-            }
-            str = this.SALT_PROD;
-        }
-        this.salt = str;
-    }
     constructor() {
         let th = this
         this.cookie = new Cookie()
@@ -76,10 +74,9 @@ export default class RequestUtils {
                 //判断url是否有额外的请求值            
                 !function () {
                     var url = this.url;
-                    let salt = getUrlSign(url)
-                    if (salt) {
-                        let query = getUrlQuery(url);
-
+                    let sign = getUrlSign(url)
+                    if (sign) {
+                        headers['DS'] = sign
                     }
                 }()
                 return data;
