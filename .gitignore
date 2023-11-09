@@ -1,5 +1,5 @@
 node_modules/
 data/*
 !package.json
-!index.js
+
 *.js
