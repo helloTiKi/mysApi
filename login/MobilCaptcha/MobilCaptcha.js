@@ -1,7 +1,7 @@
 import { geetest } from "geetest-auto";
 import { appconfig } from "../../config/appconfig.js";
 import axios from "axios";
-import RequestUtils from "../network/RequestUtils.js";
+import RequestUtils from "../../utils/RequestUtils.js";
 
 
 export default class MobileCaptcha {

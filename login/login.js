@@ -2,7 +2,7 @@ import gsData from "../config/gsData.js";
 import RSAUtils from "../utils/RSAUtils.js";
 import MobileCaptcha from "./MobilCaptcha/MobilCaptcha.js";
 import { getDevice } from "./device/getDevice.js";
-import RequestUtils from "./network/RequestUtils.js";
+import RequestUtils from "../utils/RequestUtils.js";
 
 
 export default class login {
@@ -14,7 +14,6 @@ export default class login {
             "password": RSAUtils.encrypt(password),
         }
         let UserDevice = await getDevice(username)
-
         request.setHeaders({
             'x-rpc-device_fp': UserDevice.device_fp,
             'x-rpc-device_id': UserDevice.seed_id,
@@ -22,7 +21,6 @@ export default class login {
             'x-rpc-device_name': 'NX629J',
             'x-rpc-lifecycle_id': UserDevice.device_id,
         })
-
         var response = await request.post(url, JSON.stringify(body));
         let mysdata = response
         if (mysdata.retcode !== 0) {
