@@ -1,12 +1,12 @@
 import fs from 'fs'
 const mkdir = {
-    folderPath: './data/userCookie',
+    userCookie: './data/userCookie',
     RewardPath: './data/reward',
     user: './data/user',
 };
 const File = {
-    username: mkdir.folderPath + '/username.json',
-    ltuid: mkdir.folderPath + '/ltuid.json',
+    username: mkdir.userCookie + '/username.json',
+    ltuid: mkdir.userCookie + '/ltuid.json',
     device: mkdir.user + '/device.json',
 };
 /**处理必要目录 */
@@ -22,15 +22,46 @@ const File = {
         }
     })
 })()
+/**
+ * 获取指定路径的json文件内容，如果不存在则会自动创建空json文件
+ * @param {string} file 
+ * @returns {object}
+ */
+function getFile(file) {
+    if (!fs.existsSync(file)) {
+        fs.writeFileSync(file, '{}', 'utf-8');
+    }
+    return JSON.parse(fs.readFileSync(file, 'utf-8'))
+}
+/**
+ * 设置指定路径的json文件内容
+ * @param {string} file 
+ * @param {string} data 
+ */
+function setFile(file, data) {
+    let saveData = ''
+    switch (typeof data) {
+        case 'string':
+            saveData = data
+            break;
+        case 'object':
+            saveData = JSON.stringify(data)
+            break;
+        default:
+            saveData = ''
+    }
+    fs.writeFileSync(file, saveData, 'utf-8');
+}
 
 class gsData {
     getltuidByUserName(username) {
-        let data = JSON.parse(fs.readFileSync(File.username, 'utf-8'))
+        let data = getFile(File.username)
         return data[username] ? data[username] : null
     }
     getCookieByLtuid(ltuid) {
-        let data = JSON.parse(fs.readFileSync(File.ltuid, 'utf-8'))
-        return data[ltuid]
+        let key = `${mkdir.userCookie}/${ltuid}.json`
+        let data = getFile(key).Cookie
+        return data
     }
     /**
      * 
@@ -38,14 +69,13 @@ class gsData {
      * @param {string} Cookie 
      */
     setUserCookie(ltuid, Cookie) {
-        let data = JSON.parse(fs.readFileSync(File.ltuid, 'utf-8'))
-        data[ltuid] = Cookie
-        fs.writeFileSync(File.ltuid, JSON.stringify(data), 'utf-8')
+        let key = `${mkdir.userCookie}/${ltuid}.json`
+        setFile(key, { Cookie })
     }
     setUserName(username, ltuid) {
-        let data = JSON.parse(fs.readFileSync(File.username, 'utf-8'))
+        let data = getFile(File.username)
         data[username] = ltuid
-        fs.writeFileSync(File.username, JSON.stringify(data), 'utf-8')
+        setFile(File.username, JSON.stringify(data))
     }
     getReward(game_biz = '') {
         if (game_biz) return ''
@@ -55,19 +85,18 @@ class gsData {
     }
     setReward(game_biz, data) {
         let key = `${mkdir.RewardPath}/${game_biz}.json`
-        fs.writeFileSync(key, data, 'utf-8')
+        setFile(key, data)
     }
-
     getUserDevice(username = '') {
         if (!username) return null;
-        let data = JSON.parse(fs.readFileSync(File.device, 'utf-8'))
+        let data = getFile(File.device)
         return data[username] ? data[username] : null
     }
     setUserDevice(username = '', device) {
         if (!username) return;
-        let data = JSON.parse(fs.readFileSync(File.device, 'utf-8'))
+        let data = getFile(File.device)
         data[username] = device
-        fs.writeFileSync(File.device, JSON.stringify(data), 'utf-8')
+        setFile(File.device, JSON.stringify(data))
     }
 }
 export default new gsData()

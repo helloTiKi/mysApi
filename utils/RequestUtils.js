@@ -5,6 +5,19 @@ import { appconfig, hostSalt, saltType } from '../config/appconfig.js';
 import { geetest } from 'geetest-auto';
 import CryptoJS from 'crypto-js';
 
+axios.defaults.headers.common = appconfig
+axios.defaults.transformRequest = [function (data, headers) {
+    var url = this.url;
+    //判断url是否有额外的请求值            
+    !function () {
+        let sign = getUrlSign(url, data)
+        if (sign) {
+            headers['DS'] = sign
+        }
+    }()
+    return data;
+}]
+
 function getSaltFunction(salt = '') {
     if (!salt) return false
     let type = saltType[salt];
@@ -66,22 +79,14 @@ function getDssign(salt, body = '', query = '') {
  */
 
 export default class RequestUtils {
-    constructor() {
+    /**
+     * 
+     * @param {Cookie} cookieTool 
+     */
+    constructor(cookieTool) {
         let th = this
-        this.cookie = new Cookie()
-        this.request = axios.create({
-            transformRequest: [function (data, headers) {
-                //判断url是否有额外的请求值            
-                !function () {
-                    var url = this.url;
-                    let sign = getUrlSign(url)
-                    if (sign) {
-                        headers['DS'] = sign
-                    }
-                }()
-                return data;
-            }]
-        })
+        this.cookie = cookieTool || new Cookie()
+        this.request = axios.create()
         this.request.interceptors.response.use(function (response) {
             th.cookie.setCookieByHeader(response.headers)
             return response;
@@ -90,15 +95,34 @@ export default class RequestUtils {
         });
         this.headers = appconfig
     }
-    async get(url = '', query = '') {
-        let response = this.request.get(url, {
+    /**
+     * 
+     * @param {string} url 
+     * @param {object} query 
+     * @returns {Promise<mysResponse>}
+     */
+    async get(url = '', query = {}) {
+        let response = await this.request.get(url, {
             headers: {
-                ...this.headers,
-                DS: RequestUtils.createSign('', query)
+                ...this.headers
             },
             params: query
         });
-        return await this.checkResponse(response)
+        switch (await this.checkResponse(response.data)) {
+            case 'ok':
+                let ret = {
+                    ...response.data,
+                    headers: response.headers
+                }
+                return ret
+            case 'error':
+                console.error(response.data)
+                return false
+            case 'repeat':
+                response = await this.post(url, body, query)
+                this.setHeader('x-rpc-aigis', '')
+                return response
+        }
     }
     /**
      * 
@@ -110,13 +134,12 @@ export default class RequestUtils {
     async post(url = '', body = '', query = '') {
         let response = await this.request.post(url, body, {
             headers: {
-                ...this.headers,
-                DS: RequestUtils.createSign(body, query)
+                ...this.headers
             },
             params: query
         });
 
-        switch (await this.checkResponse(response)) {
+        switch (await this.checkResponse(response.data)) {
             case 'ok':
                 let ret = {
                     ...response.data,
@@ -141,17 +164,13 @@ export default class RequestUtils {
     setHeader(key, value) {
         this.headers[key] = value;
     }
-    setCookie(key, value) {
-        this.cookie.setCookie(key, value)
-    }
     /**
      * 
-     * @param {any} response 
+     * @param {mysResponse} response 
      * @returns {Promise<'ok'|'repeat'|'error'>}
      */
     async checkResponse(response) {
-        /**@type {mysResponse} */
-        let mysdata = response.data;
+        let mysdata = response
         if (mysdata.retcode == -3101) {
             //风险验证
             console.log('请求频繁需要验证')

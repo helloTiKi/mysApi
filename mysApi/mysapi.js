@@ -4,6 +4,7 @@ import fetch from "node-fetch";
 import util from 'node:util'
 import webLogin from "../webLogin/webLogin.js";
 import gsData from "../config/gsData.js";
+import user from "../user/user.js";
 
 Object.prototype.json = function () { return JSON.stringify(this) }
 class cookie {
@@ -118,21 +119,19 @@ function getMysCookie(cookie) {
     return cookieret.join(';')
 }
 
-export default class mysApi {
+export default class mysApi extends user {
+
     isLogin = false;
     server = ''
     /**
      * @returns {string}
      */
     get ltuid() {
-        return this._cookie.get('ltuid')
+        return this._cookie.getCookie('ltuid')
     }
     get device() {
         if (!this._device) this._device = `Yz-${md5(this.ltuid).substring(0, 5)}`
         return this._device
-    }
-    get cookie() {
-        return this._cookie.tocookie('v1')
     }
     get cookie_v2() {
         return this._cookie.tocookie('v2')
@@ -140,48 +139,40 @@ export default class mysApi {
     get cookie_v3() {
         return this._cookie.tocookie('v3')
     }
-
     constructor(cookies) {
-        this._cookie = new cookie(cookies)
+        super(cookies)
         this.UserGameRoles = {}
         if (this.cookie) {
             this.init()
         }
     }
     init() {
+        let th = this
         /**@private */
         this.UserGameRoles = new Promise((resolve, reject) => {
-            let param = {
-                method: 'GET',
-                headers: {
-                    'Cookie': this.cookie,
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',
-                }
-            }
-            let url = 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie'
-            fetch(url, param).then(response => {
-                if (!response.ok) {
-                    console.error(`[米游社接口][${type}][${this.uid}] ${response.status} ${response.statusText}`)
-                    return false
-                }
-                response.json().then(data => {
-                    if (data.retcode != 0) {
-                        console.error(data.message);
-                        resolve({});
-                        if (this.ltuid) gsData.setUserCookie(this.ltuid, '')
-                        this.isLogin = false
-                        return;
-                    }
-                    let list = data.data.list;
-                    let user = {}
-                    list.forEach(obj => {
-                        user[obj.game_biz] = obj;
-                    })
-                    resolve(user)
-                    this.isLogin = true;
-                    gsData.setUserCookie(this.ltuid, this._cookie.tocookie())
-                })
+            th.request.setHeaders({
+                'Cookie': this.cookie,
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',
             })
+            let url = 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie'
+            th.request.get(url).then(data => {
+                if (data.retcode != 0) {
+                    console.error(data.message);
+                    resolve({});
+                    if (this.ltuid) gsData.setUserCookie(this.ltuid, '')
+                    this.isLogin = false
+                    return;
+                }
+                let list = data.data.list;
+                let user = {}
+                list.forEach(obj => {
+                    user[obj.game_biz] = obj;
+                })
+                resolve(user)
+                this.isLogin = true;
+                gsData.setUserCookie(this.ltuid, this._cookie.CookieString)
+            })
+
         })
     }
     /**
@@ -380,7 +371,7 @@ export default class mysApi {
             method: 'POST',
             body: body.json(),
         })
-        
+
     }
 
     getTimeStamp(t13 = true) {

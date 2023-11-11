@@ -1,8 +1,7 @@
-
 import mysApi from "../mysApi/mysapi.js";
 import { geetest } from "geetest-auto";
-
 import gsData from "../config/gsData.js";
+import user from "../user/user.js";
 
 
 /**
@@ -25,6 +24,13 @@ import gsData from "../config/gsData.js";
  */
 
 export default class genshin extends mysApi {
+    static init(config) {
+        let data = user.init(config);
+        if (data) {
+            return new genshin(data.cookie);
+        }
+        return null;
+    }
     /**@param {string} cookie  */
     constructor(cookie) {
         super(cookie);

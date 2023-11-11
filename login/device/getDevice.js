@@ -8,17 +8,17 @@ function getGuid() {
 
     return (S4() + S4() + '-' + S4() + '-' + S4() + '-' + S4() + '-' + S4() + S4() + S4())
 }
-export async function getDevice(username) {
+export async function getDevice_5(username) {
     let UserDevice = gsData.getUserDevice(username);
     if (!UserDevice) {
         UserDevice = {
             device_id: getGuid(),
-            device_fp: '38d7f125b9802',
+            device_fp: getRandomString(10),
             seed_id: getRandomString(16),
             seed_time: String(new Date().getTime()),
             app_name: 'bbs_cn',
             platform: '5',
-            ext_fields: JSON.stringify(defaultDevice())
+            ext_fields: JSON.stringify(defaultDevice(5))
         }
     }
     if (!await getFp(UserDevice)) return null

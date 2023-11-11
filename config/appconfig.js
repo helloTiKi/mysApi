@@ -10,36 +10,41 @@ var appconfig = {
     'User-Agent': 'okhttp/4.9.3'
 }
 
-function defaultDevice() {
-    return {
-        "userAgent": "Mozilla/5.0 (Linux; Android 7.1.2; NX629J Build/N2G48C; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.198 Mobile Safari/537.36 miHoYoLogin/2.16.0",
-        "browserScreenSize": "333000",
-        "maxTouchPoints": "5",
-        "isTouchSupported": "1",
-        "browserLanguage": "zh-CN",
-        "browserPlat": "Linux i686",
-        "browserTimeZone": "Asia/Shanghai",
-        "webGlRender": "Adreno (TM) 640",
-        "webGlVendor": "Qualcomm",
-        "numOfPlugins": "0",
-        "listOfPlugins": "unknown",
-        "screenRatio": "2",
-        "deviceMemory": "4",
-        "hardwareConcurrency": "4",
-        "cpuClass": "unknown",
-        "ifNotTrack": "unknown",
-        "ifAdBlock": "0",
-        "hasLiedLanguage": "0",
-        "hasLiedResolution": "1",
-        "hasLiedOs": "0",
-        "hasLiedBrowser": "0",
-        "canvas": "e69d3b0a60291840b05df25ecf4c785d26154685744bef60ffb670432f52c3db",
-        "webDriver": "0",
-        "colorDepth": "24",
-        "pixelRatio": "2",
-        "packageName": "unknown",
-        "packageVersion": "2.19.0",
-        "webgl": "6d1465cae3498454f01675cf4c2ad5aec0881cb776cb034eb9d2212989f3259e"
+function defaultDevice(type = 2) {
+    switch (type) {
+        case 1:
+        case 2:
+        case 5:
+            return {
+                "userAgent": "Mozilla/5.0 (Linux; Android 7.1.2; NX629J Build/N2G48C; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.198 Mobile Safari/537.36 miHoYoLogin/2.16.0",
+                "browserScreenSize": "284850",
+                "maxTouchPoints": "5",
+                "isTouchSupported": "1",
+                "browserLanguage": "zh-CN",
+                "browserPlat": "Linux i686",
+                "browserTimeZone": "Asia/Shanghai",
+                "webGlRender": "Adreno (TM) 640",
+                "webGlVendor": "Qualcomm",
+                "numOfPlugins": "0",
+                "listOfPlugins": "unknown",
+                "screenRatio": "2",
+                "deviceMemory": "4",
+                "hardwareConcurrency": "4",
+                "cpuClass": "unknown",
+                "ifNotTrack": "unknown",
+                "ifAdBlock": "0",
+                "hasLiedLanguage": "0",
+                "hasLiedResolution": "1",
+                "hasLiedOs": "0",
+                "hasLiedBrowser": "0",
+                "canvas": "e69d3b0a60291840b05df25ecf4c785d26154685744bef60ffb670432f52c3db",
+                "webDriver": "0",
+                "colorDepth": "24",
+                "pixelRatio": "2",
+                "packageName": "unknown",
+                "packageVersion": "2.19.0",
+                "webgl": "6d1465cae3498454f01675cf4c2ad5aec0881cb776cb034eb9d2212989f3259e"
+            }
     }
 }
 
@@ -54,11 +59,11 @@ var Api = {
 }
 
 var saltType = {
-    'IZPgfb0dRPtBeLuFkdDznSZ6f4wWt6y2': 2
+    'JwYDpKvLj6MrMqqYU6jTKF17KNO2PXoS': 2
 }
 
 var hostSalt = {
-    'passport-api.mihoyo.com': 'IZPgfb0dRPtBeLuFkdDznSZ6f4wWt6y2'
+    'passport-api.mihoyo.com': 'JwYDpKvLj6MrMqqYU6jTKF17KNO2PXoS'
 }
 
 

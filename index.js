@@ -1,5 +1,5 @@
-import lodash from "lodash";
-import login from "./login/login.js";
+import lodash from "lodash"
+import genshin from "./genshin/index.js"
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1';
 global.getRandomString = function (long = 0, istoLowerCase = true) {
@@ -13,13 +13,8 @@ global.getTimeNow = function (length = 13) {
     return time.slice(0, length)
 }
 
-let response = await login.loginByPassword('17305928209', 'a13859926972')
+let response = genshin.init('17305928209')
 
-if (typeof response === 'function') {
-    debugger
-    let captcha = ''
-    let data = await response(captcha)
-    console.log(data)
-}
+console.log(await response.getUserGameRoles())
 console.log(response)
 debugger

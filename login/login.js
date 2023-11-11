@@ -1,19 +1,20 @@
 import gsData from "../config/gsData.js";
 import RSAUtils from "../utils/RSAUtils.js";
 import MobileCaptcha from "./MobilCaptcha/MobilCaptcha.js";
-import { getDevice } from "./device/getDevice.js";
+import { getDevice_5 } from "./device/getDevice.js";
 import RequestUtils from "../utils/RequestUtils.js";
+import user from "../user/user.js";
 
 
 export default class login {
-    static async loginByPassword(username, password) {
+    static async loginByPassword(username = '', password = '') {
         let request = new RequestUtils();
         let url = 'https://passport-api.mihoyo.com/account/ma-cn-passport/app/loginByPassword'
         let body = {
             "account": RSAUtils.encrypt(username),
             "password": RSAUtils.encrypt(password),
         }
-        let UserDevice = await getDevice(username)
+        let UserDevice = await getDevice_5(username)
         request.setHeaders({
             'x-rpc-device_fp': UserDevice.device_fp,
             'x-rpc-device_id': UserDevice.seed_id,
@@ -72,11 +73,21 @@ export default class login {
             "action_ticket": action_ticket
         }
         let mysdata = await request.post(url, body)
-        if (mysdata.data.retcode === 0) {
-            return mysdata.data.data
+        if (mysdata.retcode === 0) {
+            return mysdata.data
         } else {
             return false
         }
+    }
+    /**
+     * 
+     * @param {object} config
+     * @param {'cookie'|'username'} config.type
+     * @param {string} config.cookie
+     * @param {string} config.username
+     */
+    constructor(config) {
+
     }
 }
 

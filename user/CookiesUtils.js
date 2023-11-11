@@ -1,8 +1,8 @@
 
 
 export default class Cookie {
-    cookie = {};
     constructor() {
+        this.cookie = {}
         Object.defineProperty(this.cookie, 'CookieString', {
             get: function () {
                 return Object.keys(this).map(function (key) {
@@ -64,5 +64,8 @@ export default class Cookie {
     getCookie(key = '') {
         if (!key) return this.cookie
         return this.cookie[key] || ''
+    }
+    getAllCookie() {
+        return this.cookie
     }
 }

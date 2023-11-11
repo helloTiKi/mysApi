@@ -1,5 +1,5 @@
 
-
+//apikey 4261|KhtM7sPUNgyBG5EKvTqekDSi2VJBXQRpV7kpUhqz
 export default class qrcode {
     constructor(user) {
         this.user = user;
