@@ -1,74 +1,23 @@
 import md5 from 'md5';
 import axios from 'axios';
 import Cookie from '../user/CookiesUtils.js';
-import { appconfig, hostSalt, saltType } from '../config/appconfig.js';
+import { hostSalt, saltType, urlMap } from '../config/appconfig.js';
 import { geetest } from 'geetest-auto';
 import CryptoJS from 'crypto-js';
+import utils from './utils.js';
+import gsData from '../config/gsData.js';
 
-axios.defaults.headers.common = appconfig
-axios.defaults.transformRequest = [function (data, headers) {
-    var url = this.url;
-    //判断url是否有额外的请求值            
-    !function () {
-        let sign = getUrlSign(url, data)
-        if (sign) {
-            headers['DS'] = sign
-        }
-    }()
-    return data;
-}]
-
-function getSaltFunction(salt = '') {
-    if (!salt) return false
-    let type = saltType[salt];
-    switch (type) {
-        case 1:
-            return function () {
-                return getDs(salt)
-            }
-        case 2:
-            return function (body = '', query = '') {
-                return getDssign(salt, body, query)
-            }
-        default:
-            return false
-    }
-}
-function getUrlHost(url = '') {
-    if (/https?:\/\/(.*?)\//g.test(url)) {
-        let data = /https?:\/\/(.*?)\//g.exec(url)[1]
-        return data
-    }
-    return ''
-}
-function getUrlQuery(url = '') {
-    if (/\?(.*?)$/g.test(url)) {
-        return /\?(.*?)$/g.exec(url)[1]
-    }
-    return ''
-}
-function getUrlSign(url, data = '') {
-    let host = getUrlHost(url)
-    let salt = hostSalt[host] || ''
-    if (!salt) return ''
-    let query = getUrlQuery(url);
-    let signFunction = getSaltFunction(salt);
-    if (signFunction) {
-        return signFunction(data, query)
-    }
-    return ''
-}
-function getDs(salt) {
-    let str = `salt=${salt}&t=${getTimeNow(10)}&r=${getRandomString(6)}`
-    return md5(str)
+axios.defaults.headers.common = {
+    'x-rpc-app_id': 'bll8iq97cem8',
+    'x-rpc-aigis': '',
+    'x-rpc-app_version': '2.58.2',
+    'x-rpc-client_type': 2,
+    'x-rpc-game_biz': 'bbs_cn',
+    'x-rpc-sdk_version': '2.16.0',
+    'x-rpc-sys_version': '7.1.2',
+    'User-Agent': 'okhttp/4.9.3'
 }
 
-function getDssign(salt, body = '', query = '') {
-    var valueOf = getTimeNow(10);
-    var sb3 = getRandomString(6);
-    var m26360b = md5(`salt=${salt}&t=${valueOf}&r=${sb3}&b=${body}&q=${query}`);
-    return valueOf + ',' + sb3 + ',' + m26360b;
-}
 
 /**
  * @typedef {object} mysResponse
@@ -84,16 +33,39 @@ export default class RequestUtils {
      * @param {Cookie} cookieTool 
      */
     constructor(cookieTool) {
+        this.headers = {}
         let th = this
-        this.cookie = cookieTool || new Cookie()
-        this.request = axios.create()
+        this.cookie = cookieTool instanceof Cookie ? cookieTool : false || new Cookie()
+        this.request = axios.create({
+            transformRequest: [function (data, headers) {
+                var url = this.url
+                let sign = utils.getUrlSign(url, data)
+                if (sign) {
+                    headers['DS'] = sign
+                }
+                let cookie = utils.getUrlCookie(url, th.cookie)
+                if (cookie) {
+                    headers['Cookie'] = cookie
+                }
+                if (headers['x-rpc-client_type']) {
+                    let UserDevice = gsData.getUserDevice(th.cookie.getCookie('ltuid'), 2)
+                    if (UserDevice) {
+                        //如果最后更新时间超过1天则不使用
+                        if (UserDevice.lastUpdateTime && Date.now() - UserDevice.lastUpdateTime < 86400000) {
+                            headers['x-rpc-device-fp'] = UserDevice.device_fp
+                            headers['x-rpc-device_id'] = UserDevice.bbs_device_id
+                        }
+                    }
+                }
+                return data;
+            }]
+        })
         this.request.interceptors.response.use(function (response) {
             th.cookie.setCookieByHeader(response.headers)
             return response;
         }, function (error) {
             return Promise.reject(error);
         });
-        this.headers = appconfig
     }
     /**
      * 
@@ -101,12 +73,22 @@ export default class RequestUtils {
      * @param {object} query 
      * @returns {Promise<mysResponse>}
      */
-    async get(url = '', query = {}) {
+    async get(url = '', query, header = {}) {
+        if (query) {
+            switch (typeof query) {
+                case 'string':
+                    url += `?${query}`
+                    break
+                case 'object':
+                    url += `?${utils.jsonToQuery(query)}`
+                    break
+            }
+        }
         let response = await this.request.get(url, {
             headers: {
-                ...this.headers
-            },
-            params: query
+                ...this.headers,
+                ...header
+            }
         });
         switch (await this.checkResponse(response.data)) {
             case 'ok':
@@ -119,7 +101,7 @@ export default class RequestUtils {
                 console.error(response.data)
                 return false
             case 'repeat':
-                response = await this.post(url, body, query)
+                response = await this.get(url, query)
                 this.setHeader('x-rpc-aigis', '')
                 return response
         }
@@ -131,12 +113,22 @@ export default class RequestUtils {
      * @param {string} query 
      * @returns {Promise<mysResponse>}
      */
-    async post(url = '', body = '', query = '') {
+    async post(url = '', body = '', query = '', headers = {}) {
+        if (query != '') {
+            switch (typeof query) {
+                case 'string':
+                    url += `?${query}`
+                    break
+                case 'object':
+                    url += `?${utils.jsonToQuery(query)}`
+                    break
+            }
+        }
         let response = await this.request.post(url, body, {
             headers: {
-                ...this.headers
+                ...this.headers,
+                ...headers
             },
-            params: query
         });
 
         switch (await this.checkResponse(response.data)) {
@@ -185,7 +177,6 @@ export default class RequestUtils {
             if ([-3235, 0].includes(mysdata.retcode)) {
                 return 'ok'
             } else {
-                debugger
                 return 'ok'
             }
         }

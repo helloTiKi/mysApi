@@ -1,7 +1,7 @@
 import gsData from "../config/gsData.js";
 import RSAUtils from "../utils/RSAUtils.js";
 import MobileCaptcha from "./MobilCaptcha/MobilCaptcha.js";
-import { getDevice_5 } from "./device/getDevice.js";
+import { getDevice_5 } from "../user/device/getDevice.js";
 import RequestUtils from "../utils/RequestUtils.js";
 import user from "../user/user.js";
 

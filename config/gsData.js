@@ -3,11 +3,11 @@ const mkdir = {
     userCookie: './data/userCookie',
     RewardPath: './data/reward',
     user: './data/user',
+    device: './data/device',
 };
 const File = {
-    username: mkdir.userCookie + '/username.json',
-    ltuid: mkdir.userCookie + '/ltuid.json',
-    device: mkdir.user + '/device.json',
+    username: mkdir.user + '/username.json',
+    ltuid: mkdir.user + '/ltuid.json',
 };
 /**处理必要目录 */
 (function () {
@@ -58,9 +58,18 @@ class gsData {
         let data = getFile(File.username)
         return data[username] ? data[username] : null
     }
-    getCookieByLtuid(ltuid) {
+    getUserNameByLtuid(ltuid) {
+        let data = getFile(File.ltuid)
+        return data[ltuid] ? data[ltuid] : null
+    }
+    getCookieByUserName(username) {
+        let ltuid = this.getltuidByUserName(username)
+        return this.getCookieByLtuid(ltuid)
+    }
+    getCookieByLtuid(ltuid = '') {
+        if (!ltuid) return ''
         let key = `${mkdir.userCookie}/${ltuid}.json`
-        let data = getFile(key).Cookie
+        let data = getFile(key).Cookie || ''
         return data
     }
     /**
@@ -73,12 +82,15 @@ class gsData {
         setFile(key, { Cookie })
     }
     setUserName(username, ltuid) {
-        let data = getFile(File.username)
+        var data = getFile(File.username)
         data[username] = ltuid
         setFile(File.username, JSON.stringify(data))
+        var data = getFile(File.ltuid)
+        data[ltuid] = username
+        setFile(File.ltuid, JSON.stringify(data))
     }
     getReward(game_biz = '') {
-        if (game_biz) return ''
+        if (!game_biz) return ''
         let key = `${mkdir.RewardPath}/${game_biz}.json`
         if (!fs.existsSync(key)) return ''
         return fs.readFileSync(key, 'utf-8')
@@ -87,16 +99,18 @@ class gsData {
         let key = `${mkdir.RewardPath}/${game_biz}.json`
         setFile(key, data)
     }
-    getUserDevice(username = '') {
-        if (!username) return null;
-        let data = getFile(File.device)
-        return data[username] ? data[username] : null
-    }
-    setUserDevice(username = '', device) {
+    getUserDevice(username = '', type = '2') {
         if (!username) return;
-        let data = getFile(File.device)
-        data[username] = device
-        setFile(File.device, JSON.stringify(data))
+        let key = `${mkdir.device}/${username}.json`
+        let data = getFile(key)
+        return data[type] ? data[type] : null
+    }
+    setUserDevice(username = '', device, type = '2') {
+        if (!username) return;
+        let key = `${mkdir.device}/${username}.json`
+        let data = getFile(key)
+        data[type] = device
+        setFile(key, JSON.stringify(data))
     }
 }
 export default new gsData()

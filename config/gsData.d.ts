@@ -5,6 +5,16 @@ declare class gsData {
      */
     getltuidByUserName(userName: string): string | null;
     /**
+     * 通过米游社id获取username
+     * @param ltuid 米游社uid
+     */
+    getUserNameByLtuid(ltuid: string): string | null;
+    /**
+     * 通过用户名获取保存的cookie
+     * @param username 用户名
+     */
+    getCookieByUserName(username: string): string | null;
+    /**
      * 根据米游社uid来获取保存的cookie
      * @param ltuid 米游社uid
      */
@@ -25,8 +35,8 @@ declare class gsData {
     getReward(game_biz: 'genshin' | 'StarRail'): string
     setReward(game_biz: 'genshin' | 'StarRail', reward: string): void
 
-    getUserDevice(userName: string): UserDevice | null
-    setUserDevice(userName: string, device: UserDevice): void
+    getUserDevice(userName: string, type: 2 | 4 | 5): UserDevice | null
+    setUserDevice(userName: string, device: UserDevice, type: 2 | 4 | 5): void
 
 }
 
@@ -38,6 +48,8 @@ type UserDevice = {
     device_fp: string
     app_name: string
     ext_fields: string
+    bbs_device_id: string
+    lastUpdateTime: string
 }
 
 export default new gsData();

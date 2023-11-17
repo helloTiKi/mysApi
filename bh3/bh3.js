@@ -1,50 +1,53 @@
-import mysApi from "../mysApi/mysapi.js";
-import { geetest } from "geetest-auto";
 import gsData from "../config/gsData.js";
-import user from "../user/user.js";
+import mysApi from "../mysApi/mysapi.js";
 
 
-/**
- * @typedef signInfo
- * @property {boolean} first_bind
- * @property {boolean} is_sign
- * @property {boolean} is_sub
- * @property {boolean} month_first
- * @property {boolean} month_last_day
- * @property {number} sign_cnt_missed
- * @property {string} today
- * @property {number} total_sign_day
- */
 
-/**
- * @typedef genShinSignInfoData
- * @property {number} retcode
- * @property {string} message
- * @property {signInfo} data
- */
-
-export default class genshin extends mysApi {
-    static init(config) {
-        let data = user.init(config);
-        if (data) {
-            return new genshin(data.cookie);
-        }
-        return null;
+export class bh3 extends mysApi {
+    /**默认官服 */
+    game_biz = 'bh3_cn'
+    game_mode = 'bh3'
+    act_id = 'e202306201626331'
+    static initByCookie(cookie) {
+        return new bh3(cookie);
     }
-    /**@param {string} cookie  */
+    static initByUserName(username) {
+        let tuid = gsData.getltuidByUserName(username)
+        if (tuid) {
+            let cookie = gsData.getCookieByLtuid(tuid)
+            if (cookie) {
+                return new bh3(cookie);
+            } else return false
+        }
+        return false;
+    }
+    get region() {
+        for (const data of this.UserGameRoles[this.game_biz]) {
+            if (data.game_uid == this.uid) {
+                return data.region
+            }
+        }
+        return ''
+    }
     constructor(cookie) {
         super(cookie);
     }
-    async sign() {
-        const UserGameRoles = await this.getUserGameRoles('hk4e_cn');
-        const signInfo = await this.get_sign_info();
+    /**在使用其他api之前，请先等待这个函数完成在进行使用，否则会出现不可控的错误 */
+    async getUserGameRoles() {
+        if (typeof this.UserGameRoles.then == 'function') this.UserGameRoles = await this.UserGameRoles
+        return this.UserGameRoles[this.game_biz] || null
+    }
+    async sign(game_uid = '') {
+        if (!game_uid) return false
+        this.uid = game_uid
+        const signInfo = await this.get_sign_info()
 
         if (!signInfo) return false
         if (signInfo.retcode == -100 && signInfo.message == '尚未登录') {
-            console.error(`[签到失败][uid:${UserGameRoles.game_uid}] 绑定cookie已失效`)
+            console.error(`[签到失败][uid:${this.uid}] 绑定cookie已失效`)
             return {
                 retcode: -100,
-                msg: `签到失败，uid:${UserGameRoles.game_uid}，绑定cookie已失效`,
+                msg: `签到失败，uid:${this.uid}，绑定cookie已失效`,
                 is_invalid: true
             }
         }
@@ -67,7 +70,7 @@ export default class genshin extends mysApi {
             let reward = await this.getReward(Info.total_sign_day)
             return {
                 retcode: 0,
-                msg: `uid:${UserGameRoles.game_uid}，今天已签到\n第${Info.total_sign_day}天奖励：${reward}`,
+                msg: `uid:${this.uid}，今天已签到\n第${Info.total_sign_day}天奖励：${reward}`,
                 is_sign: true
             }
         }
@@ -87,42 +90,39 @@ export default class genshin extends mysApi {
             let reward = await this.getReward(totalSignDay)
             return {
                 retcode: 0,
-                msg: `uid:${UserGameRoles.game_uid}，${tips}\n第${totalSignDay}天奖励：${reward}`
+                msg: `uid:${this.uid}，${tips}\n第${totalSignDay}天奖励：${reward}`
             }
         }
 
         return {
             retcode: -1000,
-            msg: `uid:${UserGameRoles.game_uid}，签到失败：${this.signMsg}`
+            msg: `uid:${this.uid}，签到失败：${this.signMsg}`
         }
     }
-    /**
-     * 
-     * @returns {Promise<genShinSignInfoData>}
-     */
+
     async get_sign_info() {
-        let UserGameRoles = await this.getUserGameRoles('hk4e_cn')
-        const signInfo = await this.send({
-            url: "https://api-takumi.mihoyo.com/event/bbs_sign_reward/info",
-            method: "get",
-            query: `act_id=e202009291139501&region=${UserGameRoles.region}&uid=${UserGameRoles.game_uid}`,
-            sign: true,
-        })
+        if (this.region == '') return null
+        const signInfo = await this.request.get("https://api-takumi.mihoyo.com/event/luna/info"
+            , {
+                act_id: this.act_id,
+                region: this.region,
+                uid: this.uid
+            })
 
         return signInfo
     }
     async bbs_sign() {
-        let url = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/sign"
-        let UserGameRoles = await this.getUserGameRoles('hk4e_cn')
-        let sign = await this.send({
-            url,
-            method: "post",
-            body: JSON.stringify({
-                'act_id': 'e202009291139501',
-                'region': UserGameRoles.region,
-                'uid': UserGameRoles.game_uid
-            }),
-            sign: true
+        let url = "https://api-takumi.mihoyo.com/event/luna/sign"
+        let body = JSON.stringify({
+            'act_id': this.act_id,
+            'region': this.region,
+            'uid': this.uid
+        })
+
+        let sign = await this.request.post(url, body, '', {
+            'x-rpc-client_type': 5,
+            'x-rpc-channel': 'nochannel',
+            'x-rpc-platform': 'android'
         })
         if (!sign) {
             return false
@@ -143,7 +143,7 @@ export default class genshin extends mysApi {
                 body: JSON.stringify({
                     'act_id': 'e202009291139501',
                     'region': UserGameRoles.region,
-                    'uid': UserGameRoles.game_uid
+                    'uid': game_uid
                 }),
                 sign: true,
                 header: {
@@ -164,30 +164,29 @@ export default class genshin extends mysApi {
     }
     // 缓存签到奖励
     async getReward(signDay = 0) {
-        const UserGameRoles = await this.getUserGameRoles('hk4e_cn')
         let today = new Date()
-        let reward = gsData.getReward('genshin')
+        let reward = gsData.getReward(this.game_mode)
         if (reward) {
             reward = JSON.parse(reward)
         }
-        if (!reward || reward[endMonth] < today.getMonth() + 1) {
-            let res = await this.send({
-                url: "https://api-takumi.mihoyo.com/event/bbs_sign_reward/home",
-                method: "get",
-                sign: true,
-                query: `act_id=e202009291139501&region=${UserGameRoles.region}&uid=${UserGameRoles.game_uid}`
-            })
+        if (!reward || reward?.endMonth < today.getMonth() + 1) {
+            let res = await this.request.get("https://api-takumi.mihoyo.com/event/luna/home",
+                {
+                    act_id: this.act_id
+                })
+
             if (!res || res.retcode !== 0) return ''
             let data = res.data
             if (data && data.awards && data.awards.length > 0) {
-                reward = data.awards
-                reward.endMonth = today.getMonth() + 1
-                gsData.setReward('genshin', JSON.stringify(reward))
+                reward = {}
+                reward.list = data.awards
+                reward.endMonth = data.month
+                gsData.setReward(this.game_mode, JSON.stringify(reward))
             } else {
                 return ''
             }
         }
-
+        reward = reward.list
         if (reward && reward.length > 0) {
             reward = reward[signDay - 1] || ''
             if (reward.name && reward.cnt) {

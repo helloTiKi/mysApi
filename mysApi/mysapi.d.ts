@@ -1,4 +1,6 @@
-declare class GameRoles {
+import RequestUtils from "../utils/RequestUtils"
+
+export declare class GameRoles {
     game_biz: string
     region: string
     game_uid: string
@@ -10,9 +12,9 @@ declare class GameRoles {
 }
 declare class UserGameRoles {
     /**原神 */
-    'hk4e_cn': GameRoles
+    'hk4e_cn': GameRoles[]
     /**崩坏：星穹铁道 */
-    'hkrpg_cn': GameRoles
+    'hkrpg_cn': GameRoles[]
 }
 
 
@@ -43,11 +45,11 @@ interface mysRequest {
 }
 
 export default class mysApi {
-    cookie: string
+    model: 'genshin' | 'bh3' | 'StarRail' | string
     server: string
+    request: RequestUtils
     constructor(cookie: string)
-    getUserGameRoles(): Promise<UserGameRoles>
-    getUserGameRoles(game_biz: 'hk4e_cn' | 'hkrpg_cn'): Promise<GameRoles>
+    UserGameRoles: UserGameRoles
     /**
      * 用户名登入
      * @param username 用户名
