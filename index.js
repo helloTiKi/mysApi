@@ -8,7 +8,7 @@ import { bh3 } from "./bh3/bh3.js";
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1';
 
 
-let _genshin = bh3.initByUserName('17040490122')
+let _genshin = genshin.initByUserName('17040490122')
 
 if (!_genshin) {
     let use = new user();

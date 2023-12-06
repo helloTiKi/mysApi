@@ -109,7 +109,7 @@ var hostSalt = {
     'api-takumi.mihoyo.com': function (url = '') {
         if (url == '') return ''
         let path = utils.getUrlPath(url)
-        let map = ['/event/bbs_sign_reward/sign'];
+        let map = ['/event/bbs_sign_reward/sign','/event/luna/resign','/event/luna/sign'];
         return map.includes(path) ? 'KTJQGN2a2Trqk0tcQZS6JV3rU7CnV8Q6' : 'kzTvKGDHumYf6h1Ia5txMjxAJuTtD0ol'
     }
 }

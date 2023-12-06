@@ -133,15 +133,15 @@ export default class genshin extends mysApi {
      */
     async get_sign_info() {
         if (this.region == '') return null
-        const signInfo = await this.request.get("https://api-takumi.mihoyo.com/event/bbs_sign_reward/info"
-            , `act_id=e202009291139501&region=${this.region}&uid=${this.uid}`)
+        const signInfo = await this.request.get("https://api-takumi.mihoyo.com/event/luna/info"
+            , `act_id=e202311201442471&region=${this.region}&uid=${this.uid}`, { 'x-rpc-signgame': 'hk4e' })
 
         return signInfo
     }
     async bbs_sign() {
-        let url = "https://api-takumi.mihoyo.com/event/bbs_sign_reward/sign"
+        let url = "https://api-takumi.mihoyo.com/event/luna/sign"
         let body = JSON.stringify({
-            'act_id': 'e202009291139501',
+            'act_id': 'e202311201442471',
             'region': this.region,
             'uid': this.uid
         })
@@ -149,7 +149,8 @@ export default class genshin extends mysApi {
         let sign = await this.request.post(url, body, '', {
             'x-rpc-client_type': 5,
             'x-rpc-channel': 'nochannel',
-            'x-rpc-platform': 'android'
+            'x-rpc-platform': 'android',
+            'x-rpc-signgame': 'hk4e'
         })
         if (!sign) {
             return false

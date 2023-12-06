@@ -46,7 +46,7 @@ export async function getDevice_2(username) {
     delete UserDevice.lastUpdateTime;
     if (!await getFp(UserDevice)) return null
     UserDevice.lastUpdateTime = String(new Date().getTime());
-    gsData.setUserDevice(username, UserDevice, 2);
+    gsData.setUserDevice(username, UserDevice, '2');
     return UserDevice;
 }
 

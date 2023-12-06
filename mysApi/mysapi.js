@@ -51,6 +51,11 @@ export default class mysApi extends user {
         this.UserGameRoles = new Promise(async (resolve, reject) => {
             if (!await this.verifyLtoken()) {
                 await this.getLTokenBySToken()
+                if (!await this.verifyLtoken()) {
+                    reject('获取LToken失败')
+                    console.error('获取LToken失败')
+                    return
+                }
             }
             if (this._cookie.getCookie('cookie_token') == '') {
                 await this.getCookieTokenByStoken()
@@ -119,8 +124,7 @@ export default class mysApi extends user {
     async verifyVerification() {
         let url = "https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/verifyVerification"
     }
-    async getActionTicketBySToken() {
-    }
+
     /**
      * 绑定游戏默认角色
      * @param {object} config 
@@ -137,6 +141,10 @@ export default class mysApi extends user {
             method: 'POST',
             body
         })
+
+    }
+
+    async signIn(gids) {
 
     }
 }

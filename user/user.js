@@ -32,7 +32,7 @@ export default class user {
             return false
         }
     }
-    static async getUserGameRoles(cookie = '') {
+    static async getUserGameRolesByCookie(cookie = '') {
         if (cookie == '') return false
         let _cookie = new Cookie(cookie)
         let request = new RequestUtils(_cookie)
