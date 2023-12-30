@@ -1,6 +1,6 @@
-import mysApi from "../mysApi/mysapi.js";
+import mysApi from "../../mysApi/mysapi.js";
 import { geetest } from "geetest-auto";
-import gsData from "../config/gsData.js";
+import gsData from "../../config/gsData.js";
 
 import util from 'node:util'
 
@@ -170,8 +170,8 @@ export default class genshin extends mysApi {
                 method: "post",
                 body: JSON.stringify({
                     'act_id': 'e202009291139501',
-                    'region': UserGameRoles.region,
-                    'uid': game_uid
+                    'region': this.region,
+                    'uid': this.uid
                 }),
                 sign: true,
                 header: {

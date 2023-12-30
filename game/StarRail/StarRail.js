@@ -1,5 +1,5 @@
-import gsData from "../config/gsData.js";
-import mysApi from "../mysApi/mysapi.js";
+import gsData from "../../config/gsData.js";
+import mysApi from "../../mysApi/mysapi.js";
 
 
 

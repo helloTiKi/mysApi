@@ -1,3 +1,4 @@
+import user from "../user/user"
 import RequestUtils from "../utils/RequestUtils"
 
 export declare class GameRoles {
@@ -44,7 +45,7 @@ interface mysRequest {
     headers?: mysHeaders
 }
 
-export default class mysApi {
+export default class mysApi extends user{
     model: 'genshin' | 'bh3' | 'StarRail' | string
     server: string
     request: RequestUtils
