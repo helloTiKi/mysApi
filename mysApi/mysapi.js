@@ -39,11 +39,15 @@ function getMysCookie(cookie) {
 
 export default class mysApi extends user {
     model = ''
-    isLogin = false;
+    #isLogin = false;
     constructor(cookies) {
         super(cookies)
         this.UserGameRoles = {}
         this.init()
+    }
+    async isLogin() {
+        if (this.UserGameRoles.then) await this.UserGameRoles
+        return this.#isLogin
     }
     async init() {
         let th = this
@@ -69,7 +73,7 @@ export default class mysApi extends user {
                     console.error(data.message);
                     resolve({});
                     if (this.ltuid) gsData.setUserCookie(this.ltuid, '')
-                    this.isLogin = false
+                    this.#isLogin = false
                     return;
                 }
                 let list = data.data.list;
@@ -79,7 +83,7 @@ export default class mysApi extends user {
                     user[obj.game_biz].push(obj);
                 })
                 resolve(user)
-                this.isLogin = true;
+                this.#isLogin = true;
                 gsData.setUserCookie(this.ltuid, this._cookie.CookieString)
             })
 

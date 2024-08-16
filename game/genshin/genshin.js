@@ -49,9 +49,9 @@ export default class genshin extends mysApi {
             let cookie = gsData.getCookieByLtuid(tuid)
             if (cookie) {
                 return new genshin(cookie);
-            } else return false
+            } else return undefined
         }
-        return false;
+        return undefined;
     }
     get region() {
         for (const data of this.UserGameRoles['hk4e_cn']) {
