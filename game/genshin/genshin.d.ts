@@ -1,11 +1,12 @@
-import mysApi from "../mysApi/mysapi";
-import { GameRoles } from '../mysApi/mysapi'
+import { GameRoles, mysApi } from '../../mysApi/mysapi'
 
-export default class genshin extends mysApi {
-    static initByCookie(cookie: string): genshin | undefined;
-    static initByUserName(username: string): genshin | undefined;
+class genshin extends mysApi {
+    static initByCookie(cookie: string): genshin;
+    static initByUserName(username: string): genshin;
     static init(cookie: string): false | genshin;
-    constructor(cookie: string) { super(cookie) };
+    constructor(cookie: string) { super(cookie) }
     getUserGameRoles(): Promise<GameRoles[]>
     sign(): Promise<boolean>;
 }
+
+export default genshin

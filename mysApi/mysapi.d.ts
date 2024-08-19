@@ -1,7 +1,7 @@
 import user from "../user/user"
 import RequestUtils from "../utils/RequestUtils"
 
-export declare class GameRoles {
+declare class GameRoles {
     game_biz: string
     region: string
     game_uid: string
@@ -45,7 +45,7 @@ interface mysRequest {
     headers?: mysHeaders
 }
 
-export default class mysApi extends user {
+class mysApi extends user {
     model: 'genshin' | 'bh3' | 'StarRail' | string
     server: string
     request: RequestUtils
@@ -57,8 +57,10 @@ export default class mysApi extends user {
      * 只传入用户名，将会尝试获取保存的cookie，如果获取结果为空且未传入密码，将会使用手机验证码登入
      */
     login(username: string): Promise<string>
-    isLogin(): Promise<boolean>
+    public isLogin(): Promise<boolean>
     send(mysRequest: mysRequest): Promise<mysResponse>
     getDsSign(): string
     getDs(): string
 }
+
+export { mysApi, GameRoles }

@@ -1,4 +1,3 @@
-import md5 from 'md5';
 import axios from 'axios';
 import Cookie from '../user/CookiesUtils.js';
 import { hostSalt, saltType, urlMap } from '../config/appconfig.js';

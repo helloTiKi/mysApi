@@ -1,4 +1,3 @@
-import md5 from "md5";
 import lodash from "lodash";
 import fetch from "node-fetch";
 import util from 'node:util'

@@ -1,4 +1,4 @@
-import md5 from "md5";
+import { md5 } from "./md5.js";
 import { saltType, urlMap, hostSalt } from "../config/appconfig.js";
 
 
