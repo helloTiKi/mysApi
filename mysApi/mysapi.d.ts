@@ -46,10 +46,10 @@ interface mysRequest {
 }
 
 class mysApi extends user {
-    model: 'genshin' | 'bh3' | 'StarRail' | string
+    public model: 'genshin' | 'bh3' | 'StarRail' | string
     server: string
     request: RequestUtils
-    constructor(cookie: string)
+    constructor(cookie: string, config?: { model?: 'genshin' | 'bh3' | 'StarRail' | string, server?: string })
     UserGameRoles: UserGameRoles
     /**
      * 用户名登入
@@ -63,4 +63,4 @@ class mysApi extends user {
     getDs(): string
 }
 
-export { mysApi, GameRoles }
+export default mysApi 

@@ -83,10 +83,15 @@ export default class Cookie {
                     break;
             }
         }
-        if (!this.cookie['account_id']) this.cookie['account_id'] = this.cookie['ltuid']||this.cookie['stuid']
+        if (!this.cookie['account_id']) this.cookie['account_id'] = this.cookie['ltuid'] || this.cookie['stuid']
     }
     get CookieString() {
-        return this.cookie.CookieString;
+        let keys = Object.keys(this.cookie)
+        let ret = []
+        keys.forEach(e => {
+            ret.push(e + '=' + this.cookie[e])
+        })
+        return ret.join('; ')
     }
     get v1Cookie() {
         return this.cookie.v1Cookie;

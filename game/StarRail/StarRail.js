@@ -1,6 +1,6 @@
 import gsData from "../../config/gsData.js";
 import mysApi from "../../mysApi/mysapi.js";
-
+import user from "../../user/user.js";
 
 
 export class StarRail extends mysApi {
@@ -18,6 +18,9 @@ export class StarRail extends mysApi {
             } else return false
         }
         return false;
+    }
+    static initByUser(use) {
+        return new StarRail(user);
     }
     get region() {
         for (const data of this.UserGameRoles['hkrpg_cn']) {

@@ -1,7 +1,7 @@
 import lodash from "lodash";
 import fetch from "node-fetch";
 import util from 'node:util'
-import webLogin from "../webLogin/webLogin.js";
+import webLogin from "../login/webLogin/webLogin.js";
 import gsData from "../config/gsData.js";
 import user from "../user/user.js";
 
@@ -38,55 +38,9 @@ function getMysCookie(cookie) {
 
 export default class mysApi extends user {
     model = ''
-    #isLogin = false;
-    constructor(cookies) {
+    constructor(cookies, config = {}) {
         super(cookies)
-        this.UserGameRoles = {}
-        this.init()
-    }
-    async isLogin() {
-        if (this.UserGameRoles.then) await this.UserGameRoles
-        return this.#isLogin
-    }
-    async init() {
-        let th = this
-        /**@private */
-        this.UserGameRoles = new Promise(async (resolve, reject) => {
-            if (!await this.verifyLtoken()) {
-                await this.getLTokenBySToken()
-                if (!await this.verifyLtoken()) {
-                    reject('获取LToken失败')
-                    console.error('获取LToken失败')
-                    return
-                }
-            }
-            if (this._cookie.getCookie('cookie_token') == '') {
-                await this.getCookieTokenByStoken()
-            }
-            th.request.setHeaders({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',
-            })
-            let url = 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie'
-            th.request.get(url).then(data => {
-                if (data.retcode != 0) {
-                    console.error(data.message);
-                    resolve({});
-                    if (this.ltuid) gsData.setUserCookie(this.ltuid, '')
-                    this.#isLogin = false
-                    return;
-                }
-                let list = data.data.list;
-                let user = {}
-                list.forEach(obj => {
-                    if (!user[obj.game_biz]) user[obj.game_biz] = [];
-                    user[obj.game_biz].push(obj);
-                })
-                resolve(user)
-                this.#isLogin = true;
-                gsData.setUserCookie(this.ltuid, this._cookie.CookieString)
-            })
-
-        })
+        this.model = config.model || 'gs'
     }
     async login(username, password = '') {
         if (username == '') return '账号不能为空'

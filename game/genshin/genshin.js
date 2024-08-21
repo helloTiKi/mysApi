@@ -53,6 +53,9 @@ export default class genshin extends mysApi {
         }
         return undefined;
     }
+    static initByUser(user) {
+        return new genshin(user);
+    }
     get region() {
         for (const data of this.UserGameRoles['hk4e_cn']) {
             if (data.game_uid == this.uid) {
@@ -61,14 +64,12 @@ export default class genshin extends mysApi {
         }
         return ''
     }
-    /**@param {string} cookie  */
     constructor(cookie) {
-        super(cookie);
+        super(cookie, { model: "genshin" });
     }
     async sign(game_uid = '') {
         if (game_uid == '') return false
         this.uid = game_uid
-
         const signInfo = await this.get_sign_info();
         if (!signInfo) return false
         if (signInfo.retcode == -100 && signInfo.message == '尚未登录') {

@@ -1,7 +1,6 @@
 import gsData from "../../config/gsData.js";
 import mysApi from "../../mysApi/mysapi.js";
-
-
+import user from "../../user/user.js";
 
 export class bh3 extends mysApi {
     /**默认官服 */
@@ -21,6 +20,10 @@ export class bh3 extends mysApi {
         }
         return false;
     }
+    static initByUser(use) {
+        return new bh3(user);
+    }
+
     get region() {
         for (const data of this.UserGameRoles[this.game_biz]) {
             if (data.game_uid == this.uid) {

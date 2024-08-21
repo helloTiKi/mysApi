@@ -1,5 +1,5 @@
 import gsData from "../config/gsData.js";
-import login from "../login/login.js";
+
 import RSAUtils from "../utils/RSAUtils.js";
 import RequestUtils from "../utils/RequestUtils.js";
 import utils from "../utils/utils.js";
@@ -15,6 +15,7 @@ import { getDevice_2, getDevice_5 } from "./device/getDevice.js";
  */
 
 export default class user {
+    #isLogin = false; //是否登录
     static async verifyLtoken(ltuid = '', ltoken = '') {
         //如果两个参数都为空，直接返回false
         if (!ltuid || !ltoken) {
@@ -98,8 +99,17 @@ export default class user {
         return this._cookie.CookieString
     }
     constructor(cookie = '') {
+        if (cookie instanceof user) {
+            this._cookie = cookie._cookie
+            this.request = cookie.request
+            this.UserGameRoles = cookie.UserGameRoles
+            return
+        }
         this._cookie = new Cookie(cookie)
         this.request = new RequestUtils(this._cookie)
+        this.UserGameRoles = undefined
+        if (cookie == '') return
+        this.init()
     }
     async verifyLtoken() {
         //如果两个参数都为空，直接返回false
@@ -184,8 +194,90 @@ export default class user {
             return data
         } else return false
     }
+    async loginByMobileCaptcha(username = '', callback) {
+        if (username.length != 11 || typeof callback != 'function') return false
+        let url = 'https://passport-api.mihoyo.com/account/ma-cn-verifier/verifier/createLoginCaptcha'
+        let body = {
+            "mobile": RSAUtils.encrypt(username),
+            "area_code": RSAUtils.encrypt("+86"),
+        }
+        let device = await getDevice_2(username)
+        this.request.setHeaders({
+            'x-rpc-device_fp': device.device_fp,
+            'x-rpc-device_id': device.bbs_device_id,
+            'x-rpc-device_model': 'SEA-AL10',
+            'x-rpc-device_name': 'SEA-AL10',
+            'x-rpc-lifecycle_id': utils.getGuid()
+        })
+        var response = await this.request.post(url, JSON.stringify(body));
+        if (response.retcode == -3235) return console.error("设备需要风险验证"), false
+        if (response.retcode != 0) return console.error(response.message), false
+        body['action_type'] = response.data.action_type
+        body.captcha = callback()
+        if (body.captcha == '') return console.error("验证码不能为空"), false
+        url = "https://passport-api.mihoyo.com/account/ma-cn-passport/app/loginByMobileCaptcha";
+        response = await this.request.post(url, JSON.stringify(body));
+        if (response.retcode != 0) return console.error(response.message), false
+        let data = {
+            /**@type {string} */
+            stoken: response.data.token.token,
+            /**@type {string} */
+            login_ticket: response.data.login_ticket,
+            /**@type {string} */
+            mid: response.data.user_info.mid,
+            /**@type {string} */
+            stuid: response.data.user_info.aid
+        }
+        this._cookie.setCookieByObject(data)
+        gsData.setUserCookie(data.stuid, data)
+        return data
+    }
     saveCookie() {
         let data = this._cookie.CookieString
         gsData.setUserCookie(this.ltuid || this.stuid, data)
+    }
+    async isLogin() {
+        if (typeof this.UserGameRoles?.then) return await this.UserGameRoles
+        return this.#isLogin
+    }
+    async init() {
+        let th = this
+        /**@private */
+        this.UserGameRoles = new Promise(async (resolve, reject) => {
+            if (!await this.verifyLtoken()) {
+                await this.getLTokenBySToken()
+                if (!await this.verifyLtoken()) {
+                    reject('获取LToken失败')
+                    console.error('获取LToken失败')
+                    return
+                }
+            }
+            if (this._cookie.getCookie('cookie_token') == '') {
+                await this.getCookieTokenByStoken()
+            }
+            th.request.setHeaders({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',
+            })
+            let url = 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie'
+            th.request.get(url).then(data => {
+                if (data.retcode != 0) {
+                    console.error(data.message);
+                    resolve({});
+                    if (this.ltuid) gsData.setUserCookie(this.ltuid, '')
+                    this.#isLogin = false
+                    return;
+                }
+                let list = data.data.list;
+                let user = {}
+                list.forEach(obj => {
+                    if (!user[obj.game_biz]) user[obj.game_biz] = [];
+                    user[obj.game_biz].push(obj);
+                })
+                resolve(user)
+                this.#isLogin = true;
+                gsData.setUserCookie(this.ltuid, this._cookie.CookieString)
+            })
+
+        })
     }
 }
