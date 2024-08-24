@@ -1,5 +1,5 @@
 import mysApi from "../../mysApi/mysapi.js";
-import { geetest } from "geetest-auto";
+//import { geetest } from "geetest-auto";
 import gsData from "../../config/gsData.js";
 
 import util from 'node:util'
@@ -162,7 +162,7 @@ export default class genshin extends mysApi {
         }
         /**风控验证 */
         if (sign.data && (sign.data.risk_code === 375)) {
-            let { gt, challenge } = sign.data;
+            /* let { gt, challenge } = sign.data;
             let geet = new geetest(gt, challenge)
             let data = await geet.start(function (result) {
             })
@@ -182,9 +182,8 @@ export default class genshin extends mysApi {
                 }
             })
             if (sign.retcode != 0) {
-                /**验证码失败 */
                 return false
-            }
+            } */
         }
         if (sign.retcode === 0 && (sign?.data.success === 0 || sign?.message === 'OK')) {
             return true

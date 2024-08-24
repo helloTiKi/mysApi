@@ -237,7 +237,7 @@ export default class user {
         gsData.setUserCookie(this.ltuid || this.stuid, data)
     }
     async isLogin() {
-        if (typeof this.UserGameRoles?.then) return await this.UserGameRoles
+        if (typeof this.UserGameRoles?.then) await this.UserGameRoles
         return this.#isLogin
     }
     async init() {

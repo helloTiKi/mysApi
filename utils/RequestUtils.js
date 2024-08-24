@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Cookie from '../user/CookiesUtils.js';
 import { hostSalt, saltType, urlMap } from '../config/appconfig.js';
-import { geetest } from 'geetest-auto';
+//import { geetest } from 'geetest-auto';
 import CryptoJS from 'crypto-js';
 import utils from './utils.js';
 import gsData from '../config/gsData.js';
@@ -163,7 +163,7 @@ export default class RequestUtils {
     async checkResponse(response) {
         let mysdata = response
         if (mysdata.retcode == -3101) {
-            //风险验证
+           /*  //风险验证
             console.log('请求频繁需要验证')
             let verifierData = JSON.parse(response.headers['x-rpc-aigis']);
             let session_id = verifierData.session_id;
@@ -171,7 +171,7 @@ export default class RequestUtils {
             let Gee = new geetest(geetestData.gt, geetestData.challenge)
             let res = await Gee.start()
             this.setHeader('x-rpc-aigis', `${session_id};${CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(JSON.stringify(res)))}`)
-            return 'repeat';
+            */ return 'error';
         } else {
             if ([-3235, 0].includes(mysdata.retcode)) {
                 return 'ok'
