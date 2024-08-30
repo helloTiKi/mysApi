@@ -20,7 +20,11 @@ class MysApi extends user {
     constructor(cookies = "") {
         super(cookies)
     }
+    async getUserGameRoles() {
+        if (typeof this.UserGameRoles.then == 'function') this.UserGameRoles = await this.UserGameRoles
+    }
     async sign(type = "all", gameUid = "") {
+        await this.getUserGameRoles()
         let retdata = {}
         switch (type) {
             case "all":

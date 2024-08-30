@@ -259,25 +259,23 @@ export default class user {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',
             })
             let url = 'https://api-takumi.mihoyo.com/binding/api/getUserGameRolesByCookie'
-            th.request.get(url).then(data => {
-                if (data.retcode != 0) {
-                    console.error(data.message);
-                    resolve({});
-                    if (this.ltuid) gsData.setUserCookie(this.ltuid, '')
-                    this.#isLogin = false
-                    return;
-                }
-                let list = data.data.list;
-                let user = {}
-                list.forEach(obj => {
-                    if (!user[obj.game_biz]) user[obj.game_biz] = [];
-                    user[obj.game_biz].push(obj);
-                })
-                resolve(user)
-                this.#isLogin = true;
-                gsData.setUserCookie(this.ltuid, this._cookie.CookieString)
+            let data = await th.request.get(url)
+            if (data.retcode != 0) {
+                console.error(data.message);
+                resolve({});
+                if (this.ltuid) gsData.setUserCookie(this.ltuid, '')
+                this.#isLogin = false
+                return;
+            }
+            let list = data.data.list;
+            let user = {}
+            list.forEach(obj => {
+                if (!user[obj.game_biz]) user[obj.game_biz] = [];
+                user[obj.game_biz].push(obj);
             })
-
+            this.#isLogin = true;
+            gsData.setUserCookie(this.ltuid, this._cookie.CookieString)
+            resolve(user)
         })
     }
 }

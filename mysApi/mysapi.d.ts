@@ -16,6 +16,7 @@ declare class UserGameRoles {
     'hk4e_cn': GameRoles[]
     /**崩坏：星穹铁道 */
     'hkrpg_cn': GameRoles[]
+    "bh3_cn": GameRoles[]
 }
 
 

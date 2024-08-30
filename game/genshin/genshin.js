@@ -64,68 +64,83 @@ export default class genshin extends mysApi {
         }
         return ''
     }
+    get uids() {
+        return this.UserGameRoles['hk4e_cn'].map((data) => data.game_uid)
+    }
     constructor(cookie) {
         super(cookie, { model: "genshin" });
     }
     async sign(game_uid = '') {
-        if (game_uid == '') return false
-        this.uid = game_uid
-        const signInfo = await this.get_sign_info();
-        if (!signInfo) return false
-        if (signInfo.retcode == -100 && signInfo.message == '尚未登录') {
-            console.error(`[签到失败][uid:${this.uid}] 绑定cookie已失效`)
-            return {
-                retcode: -100,
-                msg: `签到失败，uid:${this.uid}，绑定cookie已失效`,
-                is_invalid: true
+        let th = this;
+        async function bbs_sign(uid) {
+            if (!th.uids.includes(uid)) return { retcode: 404, message: '未绑定的uid', uid: uid }
+            th.uid = uid
+            const signInfo = await th.get_sign_info()
+            if (!signInfo) return false
+            if (signInfo.retcode == -100 && signInfo.message == '尚未登录') {
+                console.error(`[签到失败][uid:${th.uid}] 绑定cookie已失效`)
+                return {
+                    retcode: -100,
+                    msg: `签到失败，uid:${th.uid}，绑定cookie已失效`,
+                    is_invalid: true
+                }
             }
-        }
-        if (signInfo.retcode !== 0) {
-            return {
-                retcode: signInfo.retcode,
-                msg: `签到失败：${signInfo.message || '未知错误'}`
+            if (signInfo.retcode !== 0) {
+                return {
+                    retcode: signInfo.retcode,
+                    msg: `签到失败：${signInfo.message || '未知错误'}`
+                }
             }
-        }
-        if (signInfo.data.first_bind) {
-            return {
-                retcode: 100,
-                msg: '签到失败：首次请先手动签到'
+            if (signInfo.data.first_bind) {
+                return {
+                    retcode: 100,
+                    msg: '签到失败：首次请先手动签到'
+                }
             }
-        }
-        let Info = signInfo.data
-        /**是否已签到 */
-        if (Info.is_sign) {
-            // logger.mark(`[原神已签到][uid:${this.mysApi.uid}][qq:${lodash.padEnd(this.e.user_id,11,' ')}]`)
-            let reward = await this.getReward(Info.total_sign_day)
-            return {
-                retcode: 0,
-                msg: `uid:${this.uid}，今天已签到\n第${Info.total_sign_day}天奖励：${reward}`,
-                is_sign: true
+            let Info = signInfo.data
+            /**是否已签到 */
+            if (Info.is_sign) {
+                // logger.mark(`[原神已签到][uid:${this.mysApi.uid}][qq:${lodash.padEnd(this.e.user_id,11,' ')}]`)
+                let reward = await th.getReward(Info.total_sign_day)
+                return {
+                    retcode: 0,
+                    msg: `uid:${th.uid}，今天已签到\n第${Info.total_sign_day}天奖励：${reward}`,
+                    is_sign: true
+                }
             }
-        }
 
-        /** 签到 */
-        let res = await this.bbs_sign()
+            /** 签到 */
+            let res = await th.bbs_sign()
 
-        if (res) {
-            let totalSignDay = Info.total_sign_day
-            if (!Info.is_sign) {
-                totalSignDay++
+            if (res) {
+                let totalSignDay = Info.total_sign_day
+                if (!Info.is_sign) {
+                    totalSignDay++
+                }
+                let tips = '签到成功'
+                if (th.signed) {
+                    tips = '今天已签到'
+                }
+                let reward = await th.getReward(totalSignDay)
+                return {
+                    retcode: 0,
+                    msg: `uid:${th.uid}，${tips}\n第${totalSignDay}天奖励：${reward}`
+                }
             }
-            let tips = '签到成功'
-            if (this.signed) {
-                tips = '今天已签到'
-            }
-            let reward = await this.getReward(totalSignDay)
             return {
-                retcode: 0,
-                msg: `uid:${this.uid}，${tips}\n第${totalSignDay}天奖励：${reward}`
+                retcode: -1000,
+                msg: `uid:${th.uid}，签到失败：${th.signMsg}`
             }
         }
-
-        return {
-            retcode: -1000,
-            msg: `uid:${this.uid}，签到失败：${this.signMsg}`
+        if (game_uid == '') {
+            let gameRoles = this.UserGameRoles["hk4e_cn"];
+            let retdata = [];
+            for (let i = 0; i < gameRoles.length; i++) {
+                retdata.push(await bbs_sign(gameRoles[i].game_uid));
+            }
+            return retdata;
+        } else {
+            return await bbs_sign(game_uid);
         }
     }
     /**
