@@ -18,5 +18,7 @@ declare class util {
     getDssign(salt: string, body: string, query: string): string
     getGuid(): string
     jsonToQuery(json: object): string
+    Base64Encode(data: any): string
+    Base64Decode(data: string): string
 }
 export default new util()

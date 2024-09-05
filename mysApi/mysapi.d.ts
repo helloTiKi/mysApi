@@ -59,7 +59,6 @@ class mysApi extends user {
      */
     login(username: string): Promise<string>
     public isLogin(): Promise<boolean>
-    send(mysRequest: mysRequest): Promise<mysResponse>
     getDsSign(): string
     getDs(): string
 }

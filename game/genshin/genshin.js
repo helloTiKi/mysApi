@@ -1,9 +1,7 @@
 import mysApi from "../../mysApi/mysapi.js";
-//import { geetest } from "geetest-auto";
+import { geetest, Easyapi } from "geetest-auto";
 import gsData from "../../config/gsData.js";
-
-import util from 'node:util'
-
+import utils from "../../utils/utils.js";
 
 /**
  * @typedef GameRoles
@@ -161,7 +159,6 @@ export default class genshin extends mysApi {
             'region': this.region,
             'uid': this.uid
         })
-
         let sign = await this.request.post(url, body, '', {
             'x-rpc-client_type': 5,
             'x-rpc-channel': 'nochannel',
@@ -177,28 +174,27 @@ export default class genshin extends mysApi {
         }
         /**风控验证 */
         if (sign.data && (sign.data.risk_code === 375)) {
-            /* let { gt, challenge } = sign.data;
+            let { gt, challenge } = sign.data;
             let geet = new geetest(gt, challenge)
-            let data = await geet.start(function (result) {
+            let data = await geet.start(async function (result) {
+                let click = await Easyapi.jy_nine(utils.Base64Encode(result.pic))
+                return click
             })
-            sign = await this.send({
-                url,
-                method: "post",
-                body: JSON.stringify({
-                    'act_id': 'e202009291139501',
-                    'region': this.region,
-                    'uid': this.uid
-                }),
-                sign: true,
-                header: {
-                    "x-rpc-challenge": data.geetest_challenge,
-                    "x-rpc-validate": data.geetest_validate,
-                    "x-rpc-seccode": data.geetest_seccode
-                }
-            })
+            sign = await this.request.post(url, body, "", {
+                "x-rpc-challenge": data.geetest_challenge,
+                "x-rpc-validate": data.geetest_validate,
+                "x-rpc-seccode": data.geetest_seccode,
+                'x-rpc-client_type': 5,
+                'x-rpc-channel': 'nochannel',
+                'x-rpc-platform': 'android',
+                'x-rpc-signgame': 'hk4e'
+            }
+            )
             if (sign.retcode != 0) {
+                console.error('风控验证失败');
                 return false
-            } */
+            }
+
         }
         if (sign.retcode === 0 && (sign?.data.success === 0 || sign?.message === 'OK')) {
             return true
@@ -239,14 +235,12 @@ export default class genshin extends mysApi {
         return reward
     }
     async getUserGameRoles() {
-        if (util.types.isPromise(this.UserGameRoles)) this.UserGameRoles = await this.UserGameRoles
+        if (typeof this.UserGameRoles.then == 'function') this.UserGameRoles = await this.UserGameRoles
         return this.UserGameRoles['hk4e_cn'] || null
     }
-
     async getAnnList() {
         //https://hk4e-api.mihoyo.com/common/hk4e_cn/announcement/api/getAnnList?game=hk4e&game_biz=hk4e_cn&lang=zh-cn&bundle_id=hk4e_cn&channel_id=1&level=59&platform=pc&region=cn_gf01&uid=223136265
     }
-
     async getAnnContent() {
         //https://hk4e-api-static.mihoyo.com/common/hk4e_cn/announcement/api/getAnnContent?game=hk4e&game_biz=hk4e_cn&lang=zh-cn&bundle_id=hk4e_cn&platform=pc&region=cn_gf01&t=1700144683_ddfa5b374c711d8b2a84102629612833
     }

@@ -5,6 +5,45 @@ import RequestUtils from "../utils/RequestUtils.js";
 import utils from "../utils/utils.js";
 import Cookie from "./CookiesUtils.js";
 import { getDevice_2, getDevice_5 } from "./device/getDevice.js";
+async function login(username, password = '') {
+    if (username == '') return '账号不能为空'
+    let ltuid = gsData.getltuidByUserName(username)
+    if (ltuid) {
+        let cookie = gsData.getCookieByLtuid(ltuid)
+        if (cookie) {
+            this._cookie.setCookieString(cookie)
+            this.init()
+            return this.cookie
+        }
+    }
+    if (password == '') return '密码不能为空'
+    let login = new webLogin(username, password)
+    let cookie = await login.login()
+    this._cookie.setWebCookie(cookie)
+
+    this.init()
+    gsData.setUserName(username, this.ltuid)
+    return this.cookie
+}
+/**创建验证 */
+async function createVerification() {
+    let data = await this.send({
+        method: 'get',
+        url: 'https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/createVerification',
+        query: 'is_high=true'
+    })
+    if (!data) {
+        return false
+    }
+    if (data.retcode == 0) {
+        return data.data
+    } else {
+        return false
+    }
+}
+async function verifyVerification() {
+    let url = "https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/verifyVerification"
+}
 
 
 /**
@@ -42,37 +81,37 @@ export default class user {
     }
     /**
      * 
-     * @param {string} str 传入cookie或者username
+     * @param {string} username 传入username
      */
-    static init(str) {
-        let tuid = gsData.getltuidByUserName(str)
+    static initByUserName(username) {
+        let tuid = gsData.getltuidByUserName(username)
         if (tuid) {
             let cookie = gsData.getCookieByLtuid(tuid)
-            if (cookie) {
-                return new user(cookie)
-            }
+            return new user(cookie)
         } else {
-            //判断参数是否存在cookie字段，是否存在关键字段
-            let data = str.split(';')
-            let cookieKey = []
-            data.forEach(e => {
-                let d = e.split('=');
-                cookieKey.push(d[0])
-            })
-            if (cookieKey.includes('stoken') && cookieKey.includes('stuid')) {
-                //存在appCookie
-                return new user(str)
-            } else if (cookieKey.includes('ltoken') && cookieKey.includes('ltuid')
-                && cookieKey.includes('cookie_token')) {
-                //存在webcookie
-                return new user(str)
-            } else {
-                return false
-            }
+            return new user()
+        }
+    }
+    static initByCookie(str) {
+        let data = str.split(';')
+        let cookieKey = []
+        data.forEach(e => {
+            let d = e.split('=');
+            cookieKey.push(d[0])
+        })
+        if (cookieKey.includes('stoken') && cookieKey.includes('stuid')) {
+            //存在appCookie
+            return new user(str)
+        } else if (cookieKey.includes('ltoken') && cookieKey.includes('ltuid')
+            && cookieKey.includes('cookie_token')) {
+            //存在webcookie
+            return new user(str)
+        } else {
+            return false
         }
     }
     get username() {
-        return gsData.getUserNameByLtuid(this.ltuid)
+        return gsData.getUserNameByLtuid(this.ltuid) || this.ltuid
     }
     get ltuid() {
         return this._cookie.getCookie('ltuid') || this._cookie.getCookie('stuid')
@@ -118,7 +157,7 @@ export default class user {
         }
         let device = gsData.getUserDevice(this.username, 2)
         //如果最后更新时间大于一天，则执行更新
-        if (device.lastUpdateTime < Date.now() - 1000 * 60 * 60 * 24) {
+        if (device?.lastUpdateTime < Date.now() - 1000 * 60 * 60 * 24) {
             device = await getDevice_2(this.username)
         }
         this.request.setHeaders({
@@ -128,6 +167,28 @@ export default class user {
         let response = await this.request.post(
             'https://passport-api-v4.mihoyo.com/account/ma-cn-session/web/verifyLtoken',
             JSON.stringify({ t: utils.getTimeNow(13) }))
+        if (response.retcode == 0) {
+            return true
+        } else {
+            return false
+        }
+    }
+    async verifyCookieToken() {
+        //如果两个参数都为空，直接返回false
+        if (!this.ltuid || !this.ltoken) {
+            return false;
+        }
+        let device = gsData.getUserDevice(this.username, 2)
+        //如果最后更新时间大于一天，则执行更新
+        if (device?.lastUpdateTime < Date.now() - 1000 * 60 * 60 * 24) {
+            device = await getDevice_2(this.username)
+        }
+        this.request.setHeaders({
+            'x-rpc-device_fp': device.device_fp,
+            'x-rpc-device_id': device.bbs_device_id
+        })
+        let response = await this.request.post(
+            'https://passport-api.mihoyo.com/account/ma-cn-session/web/verifyCookieToken')
         if (response.retcode == 0) {
             return true
         } else {
@@ -213,7 +274,7 @@ export default class user {
         if (response.retcode == -3235) return console.error("设备需要风险验证"), false
         if (response.retcode != 0) return console.error(response.message), false
         body['action_type'] = response.data.action_type
-        body.captcha = callback()
+        body.captcha = await callback()
         if (body.captcha == '') return console.error("验证码不能为空"), false
         url = "https://passport-api.mihoyo.com/account/ma-cn-passport/app/loginByMobileCaptcha";
         response = await this.request.post(url, JSON.stringify(body));
@@ -244,7 +305,7 @@ export default class user {
         let th = this
         /**@private */
         this.UserGameRoles = new Promise(async (resolve, reject) => {
-            if (!await this.verifyLtoken()) {
+            if (!await this.verifyLtoken()) {//检查LToken是否有效
                 await this.getLTokenBySToken()
                 if (!await this.verifyLtoken()) {
                     reject('获取LToken失败')
@@ -252,8 +313,13 @@ export default class user {
                     return
                 }
             }
-            if (this._cookie.getCookie('cookie_token') == '') {
+            if (!await this.verifyCookieToken()) {//检查CookieToken是否有效
                 await this.getCookieTokenByStoken()
+                if (!await this.verifyCookieToken()) {
+                    reject('获取CookieToken失败')
+                    console.error('获取CookieToken失败')
+                    return
+                }
             }
             th.request.setHeaders({
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67',

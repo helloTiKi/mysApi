@@ -1,6 +1,6 @@
 import { md5 } from "./md5.js";
 import { saltType, urlMap, hostSalt } from "../config/appconfig.js";
-
+import CryptoJS from "crypto-js";
 
 
 class util {
@@ -145,6 +145,17 @@ class util {
             arr.push(key + '=' + json[key])
         }
         return arr.join('&')
+    }
+    Base64Encode(data) {
+        switch (typeof data) {
+            case "string":
+                return CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(data));
+            default:
+                return CryptoJS.enc.Base64.stringify(CryptoJS.lib.WordArray.create(data));
+        }
+    }
+    Base64Decode(data) {
+        return CryptoJS.enc.Base64.parse(data).toString(CryptoJS.enc.Utf8)
     }
 }
 
