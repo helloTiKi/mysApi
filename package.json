@@ -1,6 +1,6 @@
 {
   "name": "mysapi",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -20,6 +20,7 @@
   "dependencies": {
     "axios": "^1.5.0",
     "crypto-js": "^4.1.1",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "geetest-auto": "^1.0.3"
   }
 }
